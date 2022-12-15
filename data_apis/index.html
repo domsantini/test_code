@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Fetch and Graph CSV</title>
+</head>
+<body>
+    <!-- Data Provided by <a href=""https://www.sports-reference.com/sharing.html?utm_source=direct&utm_medium=Share&utm_campaign=ShareTool"">Pro-Football-Reference.com</a>: <a href=""https://www.pro-football-reference.com/years/NFL/scoring.htm?sr&utm_source=direct&utm_medium=Share&utm_campaign=ShareTool#team_scoring_season_totals"">View Original Table</a><br>Generated 12/14/2022." -->
+    <canvas id="chart" height="800" width="1000"></canvas>
+    <script>
+        const xlabels = [];
+        const totalPointPlot = [];
+        const tdPlot = [];
+        const twoPtPlot = [];
+        const patPlot = [];
+        const fgPlot = [];
+        const safetyPlot = [];
+
+        makeChart();
+
+        async function makeChart() {
+            await getData();
+            const ctx = document.getElementById('chart');
+            new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: xlabels,
+                datasets: [{
+                label: 'Total Points from Safeties',
+                data: safetyPlot,
+                backgroundColor: 'pink',
+                tension: 0.4,
+                fill: '+1'
+                },{
+                label: 'Total Points 2PTs (Off. and Def.)',
+                data: twoPtPlot,
+                backgroundColor: 'black',
+                tension: 0.4,
+                fill: '+1'
+                },{
+                label: 'Total Points from PATs',
+                data: patPlot,
+                backgroundColor: 'yellow',
+                tension: 0.4,
+                fill: '+1'
+                },{
+                label: 'Total Points from FGs',
+                data: fgPlot,
+                backgroundColor: 'green',
+                tension: 0.4,
+                fill: '+1'
+                },{
+                label: 'Total Points from TDs',
+                data: tdPlot,
+                backgroundColor: 'blue',
+                tension: 0.4,
+                fill: '+1'
+                },{
+                label: 'Total Points Scored',
+                data: totalPointPlot,
+                backgroundColor: 'red',
+                tension: 0.4,
+                fill: ''
+                }]
+            }, 
+            options: {
+                scales: {
+                y: {
+                    stacked: true,
+                    beginAtZero: true
+                }
+                }
+            }
+            });
+        }
+        
+
+        // Async function allows us to use await and store fetched data in a variable
+        async function getData() {
+            // Storing fetched data into a variable response
+            const response = await fetch("test_nfl_scoring_clean.csv");
+            // Taking that response and calling the .text() method to return csv as a text string
+            const data = await response.text();
+
+            // Calling .split() method on data variable to split by delimiter line-break (denoted by "\n") and then using .slice() method to trim off first element of our array (which would be the header row in this case) to give us a table
+            const table = data.split("\n").slice(1);
+            // forEach() is a higher order function that allows us to apply something to every element of an array
+            table.forEach(row => {
+                // This calls .split() method on row (which would be the rows in table) and splits into columns by delimiter comma
+                const columns = row.split(",");
+                // Here we grab the year and temp from the columns by indexing into the first and second elements of columns
+                // array index
+                const year = columns[0];
+                xlabels.push(year);
+
+                const tds = parseInt(columns[9]);
+                tdPlot.push(tds * 6);
+
+                const twoPts = parseInt(columns[10]);
+                const defTwoPts = parseInt(columns[11]);
+                twoPtPlot.push((twoPts * 2) + (defTwoPts * 2));
+
+                const pats = parseInt(columns[12]);
+                patPlot.push(pats);
+
+                const fgs = parseInt(columns[13]);
+                fgPlot.push(fgs * 3);
+
+                const safeties = parseInt(columns[14]);
+                safetyPlot.push(safeties * 2);
+
+                const totalPoints = parseInt(columns[15]);
+                totalPointPlot.push(totalPoints);
+                 
+                console.log(year, tds, totalPoints);
+            });                      
+        }
+    </script>
+</body>
+</html>
